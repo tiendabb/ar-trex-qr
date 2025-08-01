@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>T-Rex AR con QR</title>
+  <title>T-Rex AR Local</title>
   <!-- A-Frame + AR.js -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js" defer></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js" defer></script>
@@ -19,64 +19,56 @@
       font-family: Arial, sans-serif;
       color: white;
     }
-    #loading-screen {
-      position: fixed;
+    #start-screen {
+      position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: #000;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
+      background: #000;
       z-index: 1000;
-      color: white;
+      padding: 20px;
     }
-    #loading-screen h1 {
+    #start-screen h1 {
       font-size: 2em;
       color: #0f0;
       margin: 0 0 10px 0;
     }
-    #loading-screen p {
+    #start-screen p {
       font-size: 1.2em;
       color: #ccc;
     }
     #start-btn {
       margin-top: 30px;
-      padding: 15px 40px;
+      padding: 16px 40px;
       font-size: 1.5em;
       background: #f44336;
       color: white;
       border: none;
       border-radius: 12px;
       cursor: pointer;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+    }
+    #start-btn:hover {
+      background: #d32f2f;
     }
     #ar-scene {
       display: none;
       width: 100%;
       height: 100%;
     }
-    #status {
-      position: absolute;
-      bottom: 20px;
-      left: 0;
-      width: 100%;
-      text-align: center;
-      font-size: 1.2em;
-      color: yellow;
-      z-index: 2000;
-      opacity: 0;
-      transition: opacity 0.5s;
-    }
-    .visible { opacity: 1; }
   </style>
 </head>
 <body>
 
-  <!-- Pantalla de carga -->
-  <div id="loading-screen">
-    <h1>🦖 T-Rex AR</h1>
-    <p>Preparando realidad aumentada...</p>
+  <!-- Pantalla de inicio -->
+  <div id="start-screen">
+    <h1>🦖 T-Rex en AR</h1>
+    <p>Apunta al QR con:</p>
+    <p><strong style="color: yellow; font-size: 1.4em;">trex-animado</strong></p>
     <button id="start-btn">👉 TOCAR PARA INICIAR</button>
   </div>
 
@@ -85,14 +77,14 @@
     <a-scene
       embedded
       vr-mode-ui="enabled: false"
-      renderer="logarithmicDepthBuffer: true; background: #111;"
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
+      renderer="logarithmicDepthBuffer: true;"
+      arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
     >
-      <!-- Modelo local (desde el repositorio) -->
+      <!-- Cargar modelo LOCAL -->
       <a-asset-item id="trex-model" src="trex.glb"></a-asset-item>
 
       <!-- Marcador QR -->
-      <a-marker type="qr" value="trex-animado" id="trex-marker">
+      <a-marker type="qr" value="trex-animado">
         <!-- T-Rex con rotación continua -->
         <a-entity
           position="0 0 0"
@@ -101,6 +93,7 @@
           gltf-model="#trex-model"
           animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
         ></a-entity>
+
         <!-- Texto animado -->
         <a-text
           value="¡T-Rex en AR!"
@@ -113,42 +106,14 @@
       <!-- Cámara -->
       <a-entity camera></a-entity>
     </a-scene>
-
-    <!-- Estado del QR -->
-    <div id="status">🔍 Escaneando código QR...</div>
   </div>
 
+  <!-- Script -->
   <script>
-    const loadingScreen = document.getElementById('loading-screen');
-    const startBtn = document.getElementById('start-btn');
-    const arScene = document.getElementById('ar-scene');
-    const qrStatus = document.getElementById('status');
-
-    // Botón para iniciar AR
-    startBtn.addEventListener('click', () => {
-      loadingScreen.style.display = 'none';
-      arScene.style.display = 'block';
+    document.getElementById('start-btn').addEventListener('click', function () {
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('ar-scene').style.display = 'block';
     });
-
-    // Detectar si el QR está visible
-    function checkQR() {
-      const marker = document.querySelector('a-marker');
-      if (marker) {
-        if (marker.getAttribute('visible')) {
-          qrStatus.textContent = '✅ ¡QR detectado! T-Rex visible';
-          qrStatus.classList.add('visible');
-        } else {
-          qrStatus.textContent = '🔍 Escaneando código QR...';
-          qrStatus.classList.remove('visible');
-        }
-      }
-      setTimeout(checkQR, 500); // Repetir
-    }
-
-    // Iniciar verificación del QR
-    window.onload = () => {
-      checkQR(); // Iniciar escucha
-    };
   </script>
 </body>
 </html>
