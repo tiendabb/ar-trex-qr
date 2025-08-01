@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>T-Rex AR</title>
-  <!-- A-Frame y AR.js -->
+  <title>T-Rex AR con QR</title>
+  <!-- A-Frame + AR.js -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js" defer></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js" defer></script>
 
@@ -19,75 +19,81 @@
       font-family: Arial, sans-serif;
       color: white;
     }
-
-    /* Botón flotante para activar AR */
-    #start-ar {
+    #loading-screen {
       position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 16px 30px;
-      font-size: 1.4em;
-      background: rgba(0, 0, 0, 0.7);
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      z-index: 1000;
       color: white;
-      border: 2px solid #fff;
+    }
+    #loading-screen h1 {
+      font-size: 2em;
+      color: #0f0;
+      margin: 0 0 10px 0;
+    }
+    #loading-screen p {
+      font-size: 1.2em;
+      color: #ccc;
+    }
+    #start-btn {
+      margin-top: 30px;
+      padding: 15px 40px;
+      font-size: 1.5em;
+      background: #f44336;
+      color: white;
+      border: none;
       border-radius: 12px;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      backdrop-filter: blur(5px);
-      transition: background 0.3s, transform 0.2s;
     }
-
-    #start-ar:hover, #start-ar:active {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateX(-50%) scale(1.05);
-    }
-
-    /* Escena AR (oculta al inicio) */
     #ar-scene {
       display: none;
       width: 100%;
       height: 100%;
     }
-
-    /* Estado del QR */
-    #qr-status {
+    #status {
       position: absolute;
       bottom: 20px;
       left: 0;
       width: 100%;
       text-align: center;
-      font-size: 1.3em;
+      font-size: 1.2em;
       color: yellow;
       z-index: 2000;
       opacity: 0;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.5s;
     }
-    #qr-status.visible {
-      opacity: 1;
-    }
+    .visible { opacity: 1; }
   </style>
 </head>
 <body>
 
-  <!-- Botón para activar AR (único elemento visible al inicio) -->
-  <button id="start-ar">👉 TOCAR PARA INICIAR REALIDAD AUMENTADA</button>
+  <!-- Pantalla de carga -->
+  <div id="loading-screen">
+    <h1>🦖 T-Rex AR</h1>
+    <p>Preparando realidad aumentada...</p>
+    <button id="start-btn">👉 TOCAR PARA INICIAR</button>
+  </div>
 
   <!-- Escena AR -->
   <div id="ar-scene">
     <a-scene
       embedded
       vr-mode-ui="enabled: false"
-      renderer="logarithmicDepthBuffer: true; antialias: true;"
+      renderer="logarithmicDepthBuffer: true; background: #111;"
       arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;"
     >
-      <!-- Modelo 3D local -->
+      <!-- Modelo local (desde el repositorio) -->
       <a-asset-item id="trex-model" src="trex.glb"></a-asset-item>
 
       <!-- Marcador QR -->
       <a-marker type="qr" value="trex-animado" id="trex-marker">
-        <!-- T-Rex girando -->
+        <!-- T-Rex con rotación continua -->
         <a-entity
           position="0 0 0"
           scale="2.5 2.5 2.5"
@@ -108,23 +114,24 @@
       <a-entity camera></a-entity>
     </a-scene>
 
-    <!-- Mensaje de estado del QR -->
-    <div id="qr-status">🔍 Escaneando código QR...</div>
+    <!-- Estado del QR -->
+    <div id="status">🔍 Escaneando código QR...</div>
   </div>
 
   <script>
-    const startBtn = document.getElementById('start-ar');
+    const loadingScreen = document.getElementById('loading-screen');
+    const startBtn = document.getElementById('start-btn');
     const arScene = document.getElementById('ar-scene');
-    const qrStatus = document.getElementById('qr-status');
+    const qrStatus = document.getElementById('status');
 
-    // === Activar AR al tocar el botón ===
+    // Botón para iniciar AR
     startBtn.addEventListener('click', () => {
-      startBtn.style.display = 'none'; // Ocultar botón
-      arScene.style.display = 'block'; // Mostrar escena AR
+      loadingScreen.style.display = 'none';
+      arScene.style.display = 'block';
     });
 
-    // === Detectar si el QR está visible ===
-    function checkQRStatus() {
+    // Detectar si el QR está visible
+    function checkQR() {
       const marker = document.querySelector('a-marker');
       if (marker) {
         if (marker.getAttribute('visible')) {
@@ -135,12 +142,12 @@
           qrStatus.classList.remove('visible');
         }
       }
-      setTimeout(checkQRStatus, 500); // Repetir
+      setTimeout(checkQR, 500); // Repetir
     }
 
-    // === Iniciar escucha del QR al cargar ===
+    // Iniciar verificación del QR
     window.onload = () => {
-      checkQRStatus();
+      checkQR(); // Iniciar escucha
     };
   </script>
 </body>
