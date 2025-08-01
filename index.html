@@ -26,28 +26,35 @@
       justify-content: center;
       align-items: center;
       text-align: center;
-      background: #111;
       z-index: 1000;
+      background: #000;
     }
     #start-screen h1 {
       font-size: 1.8em;
       margin-bottom: 20px;
-      color: #0f9;
+      color: #0f0;
     }
     #start-screen p {
       font-size: 1.2em;
-      margin: 15px;
+      margin: 10px 20px;
       color: #ccc;
     }
     #start-btn {
+      margin-top: 40px;
       padding: 15px 40px;
       font-size: 1.5em;
-      background: #f44336;
+      background: #ff4060;
       color: white;
       border: none;
       border-radius: 12px;
       cursor: pointer;
       box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
     }
     #ar-scene {
       display: none;
@@ -58,12 +65,11 @@
 </head>
 <body>
 
-  <!-- Pantalla inicial: solo se muestra si es necesario -->
+  <!-- Pantalla inicial -->
   <div id="start-screen">
-    <h1>🦖 T-Rex en Realidad Aumentada</h1>
-    <p>Apunta tu cámara al código QR con el texto:</p>
-    <p><strong>trex-animado</strong></p>
-    <button id="start-btn">👉 TOCAR PARA ACTIVAR CÁMARA</button>
+    <h1>🦖 ¡T-Rex en AR!</h1>
+    <p>Apunta tu cámara al código QR después de tocar.</p>
+    <button id="start-btn">Tocar para activar cámara</button>
   </div>
 
   <!-- Escena AR -->
@@ -74,24 +80,24 @@
       embedded
       arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
     >
-      <!-- Modelo 3D desde CDN (funciona sin subir archivo) -->
-      <a-asset-item id="trex" src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@master/examples/image-tracking/nft/trex/trex.glb"></a-asset-item>
+      <!-- Cargar modelo -->
+      <a-asset-item id="trex-model" src="trex.glb"></a-asset-item>
 
       <!-- Marcador QR -->
       <a-marker type="qr" value="trex-animado">
-        <!-- T-Rex con rotación automática -->
+        <!-- T-Rex animado -->
         <a-entity
           position="0 0 0"
-          scale="2 2 2"
+          scale="0.3 0.3 0.3"
           rotation="0 180 0"
-          gltf-model="#trex"
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
+          gltf-model="#trex-model"
+          animation-mixer="clip: walk; loop: repeat; timeScale: 1.0;"
         ></a-entity>
         <!-- Texto animado -->
         <a-text
-          value="¡T-Rex en AR!"
-          color="yellow"
+          value="¡T-Rex animado!"
           position="0 1.5 0"
+          color="lime"
           animation="property: position; to: 0 1.7 0; loop: true; dur: 1500; dir: alternate"
         ></a-text>
       </a-marker>
@@ -102,38 +108,11 @@
   </div>
 
   <script>
-    const startScreen = document.getElementById('start-screen');
-    const arScene = document.getElementById('ar-scene');
-    const startBtn = document.getElementById('start-btn');
-
-    // Función para activar la cámara y mostrar AR
-    function startAR() {
-      startScreen.style.display = 'none';
-      arScene.style.display = 'block';
-      // AR.js se activa automáticamente al estar en el DOM
-    }
-
-    // Intentar detectar si podemos acceder a la cámara automáticamente
-    function checkCameraAndAutoStart() {
-      // Si el navegador ya tiene permiso de cámara, intenta iniciar directamente
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          // Cámara accesible → cierra el stream y entra directo
-          stream.getTracks().forEach(track => track.stop());
-          startAR(); // Entra sin botón
-        })
-        .catch(() => {
-          // No hay permiso → muestra el botón
-          startScreen.style.display = 'flex';
-          startBtn.onclick = startAR;
-        });
-    }
-
-    // Ejecutar al cargar
-    window.onload = () => {
-      // Retardo pequeño para asegurar carga
-      setTimeout(checkCameraAndAutoStart, 500);
-    };
+    document.getElementById('start-btn').addEventListener('click', function () {
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('ar-scene').style.display = 'block';
+      // AR.js inicia automáticamente al estar en el DOM
+    });
   </script>
 </body>
 </html>
