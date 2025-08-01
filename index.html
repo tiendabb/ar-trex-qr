@@ -7,27 +7,79 @@
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
-    body, html { margin:0; padding:0; background:#000; color:white; font-family:Arial; }
-    #error { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center; }
-    button { padding:15px 30px; font-size:1.5em; background:#f44; color:white; border:none; border-radius:10px; margin-top:20px; }
-    #ar-scene { display:none; width:100%; height:100%; }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    #start-screen {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: #111;
+      z-index: 1000;
+    }
+    #start-screen h1 {
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      color: #0f9;
+    }
+    #start-screen p {
+      font-size: 1.2em;
+      margin: 15px;
+      color: #ccc;
+    }
+    #start-btn {
+      padding: 15px 40px;
+      font-size: 1.5em;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+    }
+    #ar-scene {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Mensaje de error o botón -->
-  <div id="error">
-    <h2>🎥 Acceso a la cámara requerido</h2>
-    <p>Este sitio necesita la cámara para mostrar Realidad Aumentada.</p>
-    <button id="start-btn">👉 TOCAR PARA INICIAR</button>
+  <!-- Pantalla inicial: solo se muestra si es necesario -->
+  <div id="start-screen">
+    <h1>🦖 T-Rex en Realidad Aumentada</h1>
+    <p>Apunta tu cámara al código QR con el texto:</p>
+    <p><strong>trex-animado</strong></p>
+    <button id="start-btn">👉 TOCAR PARA ACTIVAR CÁMARA</button>
   </div>
 
   <!-- Escena AR -->
   <div id="ar-scene">
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-scene
+      vr-mode-ui="enabled: false"
+      renderer="logarithmicDepthBuffer: true;"
+      embedded
+      arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
+    >
+      <!-- Modelo 3D desde CDN (funciona sin subir archivo) -->
       <a-asset-item id="trex" src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@master/examples/image-tracking/nft/trex/trex.glb"></a-asset-item>
 
+      <!-- Marcador QR -->
       <a-marker type="qr" value="trex-animado">
+        <!-- T-Rex con rotación automática -->
         <a-entity
           position="0 0 0"
           scale="2 2 2"
@@ -35,26 +87,52 @@
           gltf-model="#trex"
           animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
         ></a-entity>
-        <a-text value="¡T-Rex!" color="lime" position="0 1.5 0"></a-text>
+        <!-- Texto animado -->
+        <a-text
+          value="¡T-Rex en AR!"
+          color="yellow"
+          position="0 1.5 0"
+          animation="property: position; to: 0 1.7 0; loop: true; dur: 1500; dir: alternate"
+        ></a-text>
       </a-marker>
+
+      <!-- Cámara -->
       <a-entity camera></a-entity>
     </a-scene>
   </div>
 
   <script>
-    document.getElementById('start-btn').onclick = function () {
-      // Intentar acceder a la cámara
+    const startScreen = document.getElementById('start-screen');
+    const arScene = document.getElementById('ar-scene');
+    const startBtn = document.getElementById('start-btn');
+
+    // Función para activar la cámara y mostrar AR
+    function startAR() {
+      startScreen.style.display = 'none';
+      arScene.style.display = 'block';
+      // AR.js se activa automáticamente al estar en el DOM
+    }
+
+    // Intentar detectar si podemos acceder a la cámara automáticamente
+    function checkCameraAndAutoStart() {
+      // Si el navegador ya tiene permiso de cámara, intenta iniciar directamente
       navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
-          // Éxito: mostrar AR
-          stream.getTracks().forEach(track => track.stop()); // cerrar temporal
-          document.getElementById('error').style.display = 'none';
-          document.getElementById('ar-scene').style.display = 'block';
+          // Cámara accesible → cierra el stream y entra directo
+          stream.getTracks().forEach(track => track.stop());
+          startAR(); // Entra sin botón
         })
-        .catch(err => {
-          console.error("Error al acceder a la cámara:", err);
-          alert("No se pudo acceder a la cámara. Asegúrate de usar HTTPS y permisos activados.");
+        .catch(() => {
+          // No hay permiso → muestra el botón
+          startScreen.style.display = 'flex';
+          startBtn.onclick = startAR;
         });
+    }
+
+    // Ejecutar al cargar
+    window.onload = () => {
+      // Retardo pequeño para asegurar carga
+      setTimeout(checkCameraAndAutoStart, 500);
     };
   </script>
 </body>
